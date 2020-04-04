@@ -1,0 +1,7 @@
+/packages/
+/node_modules/
+App_Data/
+/.idea/
+/.vs/
+bin/
+obj/

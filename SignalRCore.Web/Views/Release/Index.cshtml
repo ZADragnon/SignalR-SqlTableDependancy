@@ -1,0 +1,99 @@
+﻿@model IEnumerable<ReleaseModel>
+
+@{
+    ViewData["Title"] = "Release Page";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<table id="Releases" class="table">
+    <thead>
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Id)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Description)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Version)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.VersionUpdate)
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr id="release-@item.Id">
+            <td id="id">
+                @Html.DisplayFor(modelItem => item.Id)
+            </td>
+            <td id="description">
+                @Html.DisplayFor(modelItem => item.Description)
+            </td>
+            <th id="version">
+                @Html.DisplayFor(modelItem => item.Version)
+            </th>
+            <td id="versionUpdate">
+                @Html.DisplayFor(modelItem => item.VersionUpdate)
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+@section Scripts
+{
+    <script type="text/javascript">
+    $(function() {
+        "use strict";
+        
+        let connection = new signalR.HubConnectionBuilder().withUrl("/messages").build();
+        
+        connection.on("UpdateRelease", function (release) { 
+            console.log('Release' , release);
+            if (release != null) {
+                let currentRow = $('#release-' + release['id']);
+                let objectKeys = Object.keys(release);
+                
+                if (currentRow != null && Object.keys(currentRow).length > 0 && objectKeys != null && objectKeys.length > 0) {
+                    objectKeys.forEach(value => {
+                        let currentColumn = currentRow.find('td#' + value);
+                        
+                        if (currentColumn != null) {
+                            currentColumn.text(release[value]);
+                            currentRow.addClass('blink-text');
+                        }
+                    });
+                }
+                else if (objectKeys != null && objectKeys.length > 0) {
+                    let newRow = '<tr id="release-' + release['id'] + '" class="blink-text">';
+                    objectKeys.forEach(value => {
+                        newRow += '<td id="' + value + '">' + release[value] + '</td>';
+                    });
+                    
+                    newRow += '</tr>';
+                    $('table#Releases tbody').append(newRow);
+                }
+            }
+        });
+        
+        connection.start().then(function () {
+            //document.getElementById("sendButton").disabled = false;
+        }).catch(function (err) {
+            return console.error(err.toString());
+        });
+        
+        $("tr").on(
+            "webkitAnimationEnd oanimationend msAnimationEnd animationend",
+            function() {
+                $(this).delay(1000).queue(function() {  // Wait for 1 second.
+                    $(this).removeClass("blink-text").dequeue();
+                });
+            }
+        );
+    });
+    </script>
+}
